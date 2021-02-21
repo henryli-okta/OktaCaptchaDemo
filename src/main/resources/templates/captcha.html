@@ -1,0 +1,138 @@
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <title>CAPTCHA demo: Explicit render after an onload callback</title>
+        <script th:inline="javascript">
+            /*<![CDATA[*/
+            let useOrgCaptchaConfig = /*[[${useOrgCaptchaConfig}]]*/ true;
+            let appCaptchaConfigEnabled = /*[[${appCaptchaConfigEnabled}]]*/ false;
+            let appCaptchaInstanceId = /*[[${appCaptchaInstanceId}]]*/ null;
+
+            console.log("useOrgCaptchaConfig="+useOrgCaptchaConfig);
+            console.log("appCaptchaConfigEnabled="+appCaptchaConfigEnabled);
+            console.log("appCaptchaInstanceId="+appCaptchaInstanceId);
+
+            var instanceId = null;
+            var captchaConfigResponse = null; //This variable name is hard coded and also used in captchaConfigResponse.renderScript
+
+            function submitGetRequest(url, callback) {
+                let xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function() {
+                    if (this.readyState == 4) {
+                        console.log(this.status+":"+this.responseText);
+                        if (this.status == 200) {
+                            callback(JSON.parse(this.responseText));
+                        } else {
+                            alert("Request to " + this.request.url + " failed.");
+                        }
+                    }
+                };
+                xhttp.open("GET", url, false);
+                xhttp.send();
+            }
+
+            function isOrgCaptchaFFEnabled() {
+                var isCaptchaFFEnabled = false;
+                let url = "/siw/org/config/captcha/feature_flag";
+                submitGetRequest(url, function (responseJSON) {
+                    isCaptchaFFEnabled = responseJSON.enabled;
+                });
+                return isCaptchaFFEnabled;
+            }
+
+            function isCaptchaEnabledAndReturnInstanceId() {
+                //if useOrgCaptchaConfig=true, use org-wide captcha configuration.
+                if (useOrgCaptchaConfig) {
+                    //get org-wide captcha configuration
+                    var orgCaptchaConfig = null;
+                    let url = "/siw/org/config/captcha"
+                    submitGetRequest(url, function (responseJSON) {
+                        orgCaptchaConfig = responseJSON;
+                    });
+
+                    //if org-wide captcha is enabled, return related instance id.
+                    if (orgCaptchaConfig.enabled) {
+                        return orgCaptchaConfig.instanceId;
+                    }
+                }
+                //if useOrgCaptchaConfig=false, consider app-wide captcha configuration.
+                else if (appCaptchaConfigEnabled) {
+                    return  appCaptchaInstanceId;
+                }
+                //if both org-wide and app-wide captcha is disabled, return null.
+                return null;
+            }
+
+            function getCaptchaInstanceConfig(instanceId) {
+                let url = "/siw/captchas/"+ instanceId +"/config";
+                submitGetRequest(url, function (responseJSON) {
+                    captchaConfigResponse = responseJSON;
+                })
+            }
+
+            function onSubmit() {
+                alert("Success");
+                document.getElementById('my-form').submit();
+            }
+
+            //This function name is hard coded and also used in captchaConfigResponse.renderScript
+            //It will be called when user solves the captcha challenge.
+            function verifyCaptchaChallenge(token) {
+                var xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function() {
+                    if (this.readyState == 4) {
+                        console.log(this.status+":"+this.responseText);
+                        if (this.status == 200) {
+                            let result = JSON.parse(this.responseText);
+                            if (result.success) {
+                                onSubmit();
+                            }
+                        } else {
+                            alert("Failed");
+                        }
+                    }
+                };
+                xhttp.open("POST", "/siw/captchas/"+ captchaConfigResponse.id +"/verify", false);
+                xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                xhttp.send("token="+token);
+            }
+
+            function loadCaptchaRenderScript(script) {
+                let captchaScript = document.createElement("script");
+                captchaScript.text = script;
+                document.body.appendChild(captchaScript);
+            }
+
+            function loadCaptchaCDNUrl(url) {
+                let captchaScript = document.createElement("script");
+                captchaScript.src = url;
+                captchaScript.async = true;
+                captchaScript.defer = true;
+                document.body.appendChild(captchaScript);
+            }
+            /*]]>*/
+        </script>
+    </head>
+    <body>
+        <form id="my-form" action="/register" method="POST">
+            Name: <input name="username" type="text"> <br>
+            Email: <input name="email" type="text"> <br>
+            <input id='myBtn' type="submit" value="Submit">
+        </form>
+
+        <script>
+            //If captcha is enabled, return related captcha instance id. Or set instanceId as null.
+            if (isOrgCaptchaFFEnabled()) {
+                instanceId = isCaptchaEnabledAndReturnInstanceId();
+            }
+            console.log("instanceId="+instanceId);
+            //Get captcha configuration by instanceId and explicitly render captcha plugin.
+            if (instanceId != null) {
+                getCaptchaInstanceConfig(instanceId);
+                console.log(captchaConfigResponse);
+                loadCaptchaRenderScript(captchaConfigResponse.renderScript);
+                loadCaptchaCDNUrl(captchaConfigResponse.scriptUrl);
+            }
+
+        </script>
+    </body>
+</html>

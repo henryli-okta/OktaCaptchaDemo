@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>User Dashboard</title>
+</head>
+<body>
+    <h>User Dashboard</h>
+    User Name: <input name="username" th:value="${user.name}" readonly> <br>
+    Email: <input name="email" th:value="${user.email}" readonly>
+</body>
+</html>
