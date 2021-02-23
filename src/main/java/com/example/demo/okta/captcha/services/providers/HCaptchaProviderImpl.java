@@ -17,15 +17,9 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
-public class HCaptchaProviderImpl extends CaptchaProviderImpl implements  CaptchaProvider {
+public class HCaptchaProviderImpl extends CaptchaProviderImpl {
 
     private static final Logger LOG = LoggerFactory.getLogger(HCaptchaProviderImpl.class);
-
-    @Autowired
-    private RestTemplate restTemplate;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     @Override
     public CaptchaType getType() {

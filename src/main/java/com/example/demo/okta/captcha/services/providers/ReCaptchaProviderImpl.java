@@ -21,12 +21,6 @@ public class ReCaptchaProviderImpl extends CaptchaProviderImpl {
 
     private static final Logger LOG = LoggerFactory.getLogger(ReCaptchaProviderImpl.class);
 
-    @Autowired
-    private RestTemplate restTemplate;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @Override
     public CaptchaType getType() {
         return CaptchaType.RECAPTCHAV2;

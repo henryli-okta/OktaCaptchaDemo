@@ -6,6 +6,7 @@ import com.example.demo.okta.org.services.OktaOrgConfigurationService;
 import com.example.demo.okta.exceptions.InvalidInputException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -37,7 +38,8 @@ public class OktaOrgController {
     }
 
     @RequestMapping(path = "/api/v1/org/config/captcha", method = {RequestMethod.PUT, RequestMethod.POST})
-    public OrgCaptchaConfig updateOrgCaptchaConfig(@RequestParam("token") String authorizeToken, OrgCaptchaConfig updateOrgCaptchaConfig) {
+    public OrgCaptchaConfig updateOrgCaptchaConfig(@RequestParam("token") String authorizeToken,
+                                                   @RequestBody OrgCaptchaConfig updateOrgCaptchaConfig) {
         //simulate authentication by authorize token
         if (!StringUtils.hasText(authorizeToken)) {
             throw new InvalidInputException("invalid authorize token");

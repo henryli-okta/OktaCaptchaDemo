@@ -11,6 +11,7 @@ import com.example.demo.okta.exceptions.InvalidInputException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -75,7 +76,7 @@ public class OktaCaptchaController {
     @RequestMapping(path = "/api/v1/captchas", method = RequestMethod.POST)
     public CaptchaInstance getCaptchaInstances(
             @RequestParam("token") String authorizeToken,
-            CaptchaInstanceRequestPayload newCaptchaInstance) {
+            @RequestBody CaptchaInstanceRequestPayload newCaptchaInstance) {
         //simulate authentication by authorize token
         if (!StringUtils.hasText(authorizeToken)) {
             throw new InvalidInputException("invalid authorize token");
