@@ -42,11 +42,10 @@ public class MyDemoController {
         return "captcha";
     }
 
-    @RequestMapping(path = "/register", method = RequestMethod.POST)
-    public String register(@RequestParam("username") String name, @RequestParam("email") String email, Model model) {
-        User user = new User(name, email);
+    @RequestMapping(path = "/user_info", method = RequestMethod.POST)
+    public String register(@RequestParam("username") String username, @RequestParam("email") String email, Model model) {
+        User user = new User(username, email);
         model.addAttribute("user", user);
-        model.addAttribute("message", "123456");
         return "user_dashboard";
     }
 }

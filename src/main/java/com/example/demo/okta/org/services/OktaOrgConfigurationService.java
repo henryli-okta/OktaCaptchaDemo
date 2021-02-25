@@ -1,15 +1,16 @@
 package com.example.demo.okta.org.services;
 
+import com.example.demo.okta.captcha.beans.instances.CaptchaInstance;
+import com.example.demo.okta.captcha.services.CaptchaInstanceService;
 import com.example.demo.okta.org.beans.OrgCaptchaConfig;
-import com.example.demo.okta.org.beans.OrgCaptchaFFResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class OktaOrgConfigurationService {
-    public OrgCaptchaFFResponse hasEnableCaptchaSupportFF() {
-        OrgCaptchaFFResponse ffResponse = new OrgCaptchaFFResponse();
-        ffResponse.setEnabled(true);
-        return ffResponse;
+
+    public boolean hasEnableCaptchaSupportFF() {
+        return true;
     }
 
     public OrgCaptchaConfig getOrgCaptchaConfiguration() {

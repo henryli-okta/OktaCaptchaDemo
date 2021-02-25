@@ -7,6 +7,8 @@ import org.springframework.web.client.RestTemplate;
 public abstract class CaptchaProviderImpl implements CaptchaProvider {
     private CaptchaInstance captchaInstance;
 
+    private String verifyUrl;
+
     @Autowired
     protected RestTemplate restTemplate;
 
@@ -17,5 +19,13 @@ public abstract class CaptchaProviderImpl implements CaptchaProvider {
     @Override
     public void setCaptchaInstance(CaptchaInstance captchaInstance) {
         this.captchaInstance = captchaInstance;
+    }
+
+    public String getVerifyUrl() {
+        return verifyUrl;
+    }
+
+    public void setVerifyUrl(String verifyUrl) {
+        this.verifyUrl = verifyUrl;
     }
 }

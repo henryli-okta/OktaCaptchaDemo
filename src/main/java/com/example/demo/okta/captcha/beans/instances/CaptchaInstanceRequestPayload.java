@@ -1,15 +1,24 @@
 package com.example.demo.okta.captcha.beans.instances;
 
 import com.example.demo.okta.captcha.beans.CaptchaType;
+import com.example.demo.okta.captcha.views.Views;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonView;
 
 public class CaptchaInstanceRequestPayload {
+
+    @JsonView(Views.PublicView.class)
     @JsonProperty(required = true)
     private String name;
-    @JsonProperty(required = true)
+
+    @JsonView(Views.PublicView.class)
+    @JsonProperty(value = "sitekey", required = true)
     private String siteKey;
+
     @JsonProperty(required = true)
     private String secretKey;
+
+    @JsonView(Views.PublicView.class)
     @JsonProperty(required = true)
     private CaptchaType type;
 

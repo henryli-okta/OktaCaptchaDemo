@@ -1,23 +1,23 @@
 package com.example.demo.beans;
 
 public class User {
-    private String name;
+    private String username;
     private String email;
-
-    public User(String name, String email) {
-        this.name = name;
-        this.email = email;
-    }
 
     public User() {
     }
 
-    public String getName() {
-        return name;
+    public User(String username, String email) {
+        this.username = username;
+        this.email = email;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getEmail() {
@@ -31,7 +31,7 @@ public class User {
     @Override
     public String toString() {
         return "User{" +
-                "name='" + name + '\'' +
+                "username='" + username + '\'' +
                 ", email='" + email + '\'' +
                 '}';
     }

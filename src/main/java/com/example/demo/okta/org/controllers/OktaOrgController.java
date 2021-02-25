@@ -1,9 +1,13 @@
 package com.example.demo.okta.org.controllers;
 
+import com.example.demo.okta.captcha.beans.instances.CaptchaInstance;
+import com.example.demo.okta.captcha.services.CaptchaInstanceService;
+import com.example.demo.okta.captcha.views.Views;
 import com.example.demo.okta.org.beans.OrgCaptchaConfig;
-import com.example.demo.okta.org.beans.OrgCaptchaFFResponse;
+import com.example.demo.okta.org.beans.OrgCaptchaConfigResponse;
 import com.example.demo.okta.org.services.OktaOrgConfigurationService;
 import com.example.demo.okta.exceptions.InvalidInputException;
+import com.fasterxml.jackson.annotation.JsonView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,34 +20,47 @@ import org.springframework.web.bind.annotation.RestController;
 public class OktaOrgController {
 
     @Autowired
-    OktaOrgConfigurationService orgConfigurationService;
+    private OktaOrgConfigurationService orgConfigurationService;
 
-    @RequestMapping(path = "/siw/org/config/captcha/feature_flag", method = RequestMethod.GET)
-    public OrgCaptchaFFResponse hasEnableCaptchaSupportFF() {
-        return orgConfigurationService.hasEnableCaptchaSupportFF();
-    }
+    @Autowired
+    private CaptchaInstanceService captchaInstanceService;
 
+    @JsonView(Views.PublicView.class)
     @RequestMapping(path = "/siw/org/config/captcha", method = RequestMethod.GET)
-    public OrgCaptchaConfig getOrgCaptchaConfigFromSIW() {
-        return orgConfigurationService.getOrgCaptchaConfiguration();
+    public OrgCaptchaConfigResponse getOrgCaptchaConfigFromSIW() {
+        OrgCaptchaConfig orgCaptchaConfig =  orgConfigurationService.getOrgCaptchaConfiguration();
+        if (!orgConfigurationService.hasEnableCaptchaSupportFF()) {
+            orgCaptchaConfig.setEnabled(false);
+        }
+        return populatedOrgCaptchaConfigResponse(orgCaptchaConfig);
     }
 
     @RequestMapping(path = "/api/v1/org/config/captcha", method = RequestMethod.GET)
-    public OrgCaptchaConfig getOrgCaptchaConfig(@RequestParam("token") String authorizeToken) {
+    public OrgCaptchaConfigResponse getOrgCaptchaConfig(@RequestParam("token") String authorizeToken) {
         //simulate authentication by authorize token
         if (!StringUtils.hasText(authorizeToken)) {
             throw new InvalidInputException("invalid authorize token");
         }
-        return orgConfigurationService.getOrgCaptchaConfiguration();
+        OrgCaptchaConfig orgCaptchaConfig =  orgConfigurationService.getOrgCaptchaConfiguration();
+        return populatedOrgCaptchaConfigResponse(orgCaptchaConfig);
     }
 
     @RequestMapping(path = "/api/v1/org/config/captcha", method = {RequestMethod.PUT, RequestMethod.POST})
-    public OrgCaptchaConfig updateOrgCaptchaConfig(@RequestParam("token") String authorizeToken,
+    public OrgCaptchaConfigResponse updateOrgCaptchaConfig(@RequestParam("token") String authorizeToken,
                                                    @RequestBody OrgCaptchaConfig updateOrgCaptchaConfig) {
         //simulate authentication by authorize token
         if (!StringUtils.hasText(authorizeToken)) {
             throw new InvalidInputException("invalid authorize token");
         }
-        return orgConfigurationService.updateOrgCaptchaConfiguration(updateOrgCaptchaConfig);
+        OrgCaptchaConfig updateOrgCaptchaConfiguration =  orgConfigurationService.updateOrgCaptchaConfiguration(updateOrgCaptchaConfig);
+        return populatedOrgCaptchaConfigResponse(updateOrgCaptchaConfiguration);
+    }
+
+    private OrgCaptchaConfigResponse populatedOrgCaptchaConfigResponse(OrgCaptchaConfig orgCaptchaConfig) {
+        OrgCaptchaConfigResponse orgCaptchaConfigResponse = new OrgCaptchaConfigResponse();
+        CaptchaInstance captchaInstance = captchaInstanceService.getCaptchaInstanceById(orgCaptchaConfig.getInstanceId());
+        orgCaptchaConfigResponse.setCaptchaInstance(captchaInstance);
+        orgCaptchaConfigResponse.setEnabled(orgCaptchaConfig.getEnabled());
+        return orgCaptchaConfigResponse;
     }
 }

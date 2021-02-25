@@ -11,11 +11,11 @@ import java.util.List;
 
 public class CaptchaInstanceService {
 
-    private static final String hCaptchaSiteKey = "xxxx";
-    private static final String hCaptchaSecretKey = "xxxx";
+    private static final String hCaptchaSiteKey = "ac1a43bd-6f8b-4fc0-a205-607c1ae6dbc8";
+    private static final String hCaptchaSecretKey = "0x2A21cF928E7c9f7D2140268Fa8e3fD9B30ddA034";
 
-    private static final String reCaptchaSiteKey = "xxxx";
-    private static final String reCaptchaSecretKey = "xxxxx";
+    private static final String reCaptchaSiteKey = "6LeVzVIaAAAAAHCbhZ-uxTihGl7iuufxEF_dMH-x";
+    private static final String reCaptchaSecretKey = "6LeVzVIaAAAAAPMbptPnn3sND4hCDfjkqbyZ4AFP";
 
     private List<CaptchaInstance> captchaInstanceList;
 

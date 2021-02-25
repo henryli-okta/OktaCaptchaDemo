@@ -21,6 +21,10 @@ public class ReCaptchaProviderImpl extends CaptchaProviderImpl {
 
     private static final Logger LOG = LoggerFactory.getLogger(ReCaptchaProviderImpl.class);
 
+    public ReCaptchaProviderImpl() {
+        setVerifyUrl("https://www.google.com/recaptcha/api/siteverify");
+    }
+
     @Override
     public CaptchaType getType() {
         return CaptchaType.RECAPTCHAV2;
@@ -31,7 +35,6 @@ public class ReCaptchaProviderImpl extends CaptchaProviderImpl {
         if (!StringUtils.hasText(token)) {
             throw new InvalidInputException("token is empty");
         }
-        String url = getCaptchaInstance().getVerifyUrl();
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.valueOf(MediaType.APPLICATION_FORM_URLENCODED_VALUE));
@@ -41,7 +44,7 @@ public class ReCaptchaProviderImpl extends CaptchaProviderImpl {
         map.add("secret", getCaptchaInstance().getSecretKey());
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(map, headers);
 
-        ResponseEntity<CaptchaVerifyResponse> response = restTemplate.exchange(url, HttpMethod.POST, request, CaptchaVerifyResponse.class);
+        ResponseEntity<CaptchaVerifyResponse> response = restTemplate.exchange(getVerifyUrl(), HttpMethod.POST, request, CaptchaVerifyResponse.class);
 
         LOG.info("CAPTCHA verify executed for provider={}, result={}, clientIP={}, time={}",
                 "hCaptcha",response.getBody().isSuccess(), response.getBody().getHostname(), response.getBody().getChallenge_ts());

@@ -1,13 +1,19 @@
 package com.example.demo.okta.captcha.controllers;
 
-import com.example.demo.okta.captcha.beans.CaptchaConfigResponse;
 import com.example.demo.okta.captcha.beans.instances.CaptchaInstanceRequestPayload;
+import com.example.demo.okta.captcha.beans.instances.CaptchaVerifyRegisterRequestPayload;
 import com.example.demo.okta.captcha.services.CaptchaInstanceService;
 import com.example.demo.okta.captcha.beans.CaptchaVerifyResponse;
 import com.example.demo.okta.captcha.beans.instances.CaptchaInstance;
 import com.example.demo.okta.captcha.services.CaptchaProviderHelper;
 import com.example.demo.okta.captcha.services.providers.CaptchaProvider;
+import com.example.demo.okta.captcha.services.providers.HCaptchaProviderImpl;
+import com.example.demo.okta.captcha.views.Views;
 import com.example.demo.okta.exceptions.InvalidInputException;
+import com.example.demo.okta.org.services.OktaOrgConfigurationService;
+import com.fasterxml.jackson.annotation.JsonView;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,35 +28,37 @@ import java.util.List;
 @RestController
 public class OktaCaptchaController {
 
+    private static final Logger LOG = LoggerFactory.getLogger(OktaCaptchaController.class);
+
     @Autowired
     private CaptchaInstanceService captchaInstanceService;
 
     @Autowired
     private CaptchaProviderHelper captchaProviderHelper;
 
-    @RequestMapping(path = "/siw/captchas/{captchaInstanceId}/config", method = RequestMethod.GET)
-    public CaptchaConfigResponse getCaptchaConfigFromSIW(@PathVariable(name = "captchaInstanceId") String captchaInstanceId) {
-        CaptchaConfigResponse captchaConfigResponse = new CaptchaConfigResponse();
-        CaptchaInstance captchaInstance = captchaInstanceService.getCaptchaInstanceById(captchaInstanceId);
-        if (captchaInstance != null) {
-            captchaConfigResponse.setId(captchaInstance.getId());
-            captchaConfigResponse.setSiteKey(captchaInstance.getSiteKey());
-            captchaConfigResponse.setType(captchaInstance.getType().getAppName());
-            captchaConfigResponse.setScriptUrl(captchaInstance.getScriptUrl());
-            captchaConfigResponse.setRenderScript(captchaInstance.getRenderScript());
-        }
+    @Autowired
+    private OktaOrgConfigurationService orgConfigurationService;
 
-        return captchaConfigResponse;
+    @JsonView(Views.PublicView.class)
+    @RequestMapping(path = "/siw/captchas/{captchaInstanceId}/config", method = RequestMethod.GET)
+    public CaptchaInstance getCaptchaConfigFromSIW(@PathVariable(name = "captchaInstanceId") String captchaInstanceId) {
+        if (!orgConfigurationService.hasEnableCaptchaSupportFF()) {
+            return null;
+        }
+        return captchaInstanceService.getCaptchaInstanceById(captchaInstanceId);
     }
 
-    @RequestMapping(path = "/siw/captchas/{captchaInstanceId}/verify", method = RequestMethod.POST)
-    public CaptchaVerifyResponse verify(
-            @RequestParam("token") String token,
-            @PathVariable(name = "captchaInstanceId") String captchaInstanceId) {
-        CaptchaInstance captchaInstance = captchaInstanceService.getCaptchaInstanceById(captchaInstanceId);
+    @RequestMapping(path = "/api/v1/verify_and_register", method = RequestMethod.POST)
+    public CaptchaVerifyResponse verifyAndRegister(@RequestBody final CaptchaVerifyRegisterRequestPayload requestPayload) {
+        CaptchaInstance captchaInstance = captchaInstanceService.getCaptchaInstanceById(requestPayload.getInstanceId());
         CaptchaProvider captchaProvider = captchaProviderHelper.getCaptchaProvider(captchaInstance);
         captchaProvider.setCaptchaInstance(captchaInstance);
-        return captchaProvider.checkCaptchaVerifyResult(token);
+        CaptchaVerifyResponse verifyResponse = captchaProvider.checkCaptchaVerifyResult(requestPayload.getToken());
+        if (verifyResponse.isSuccess()){
+            //register user here
+            LOG.warn("Register user={}", requestPayload.getUserProfile());
+        }
+        return verifyResponse;
     }
 
     @RequestMapping(path = "/api/v1/captchas/{captchaInstanceId}", method = RequestMethod.GET)

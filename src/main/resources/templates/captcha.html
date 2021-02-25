@@ -11,8 +11,7 @@
             console.log("appCaptchaConfigEnabled="+appCaptchaConfigEnabled);
             console.log("appCaptchaInstanceId="+appCaptchaInstanceId);
 
-            var instanceId = null;
-            var captchaConfigResponse = null; //This variable name is hard coded and also used in captchaConfigResponse.renderScript
+            var captchaInstance = null; //This variable name is hard coded and used in rendering captcha
 
             function submitGetRequest(url, callback) {
                 let xhttp = new XMLHttpRequest();
@@ -30,16 +29,7 @@
                 xhttp.send();
             }
 
-            function isOrgCaptchaFFEnabled() {
-                var isCaptchaFFEnabled = false;
-                let url = "/siw/org/config/captcha/feature_flag";
-                submitGetRequest(url, function (responseJSON) {
-                    isCaptchaFFEnabled = responseJSON.enabled;
-                });
-                return isCaptchaFFEnabled;
-            }
-
-            function isCaptchaEnabledAndReturnInstanceId() {
+            function isCaptchaEnabledAndReturnInstanceConfig() {
                 //if useOrgCaptchaConfig=true, use org-wide captcha configuration.
                 if (useOrgCaptchaConfig) {
                     //get org-wide captcha configuration
@@ -51,32 +41,59 @@
 
                     //if org-wide captcha is enabled, return related instance id.
                     if (orgCaptchaConfig.enabled) {
-                        return orgCaptchaConfig.instanceId;
+                        return orgCaptchaConfig.captchaInstance;
                     }
                 }
                 //if useOrgCaptchaConfig=false, consider app-wide captcha configuration.
                 else if (appCaptchaConfigEnabled) {
-                    return  appCaptchaInstanceId;
+                    return  getCaptchaInstanceConfigById(appCaptchaInstanceId);
                 }
                 //if both org-wide and app-wide captcha is disabled, return null.
                 return null;
             }
 
-            function getCaptchaInstanceConfig(instanceId) {
+            function getCaptchaInstanceConfigById(instanceId) {
+                var captchaConfigResponse = null;
                 let url = "/siw/captchas/"+ instanceId +"/config";
                 submitGetRequest(url, function (responseJSON) {
                     captchaConfigResponse = responseJSON;
                 })
+                return captchaConfigResponse;
             }
 
-            function onSubmit() {
+            function redirectToUserInfoPage() {
                 alert("Success");
                 document.getElementById('my-form').submit();
             }
 
-            //This function name is hard coded and also used in captchaConfigResponse.renderScript
+            function getFormData(formId) {
+                let form = document.getElementById(formId);
+                var obj = {};
+                var elements = form.querySelectorAll( "input, select, textarea" );
+                for( var i = 0; i < elements.length; ++i ) {
+                    var element = elements[i];
+                    var name = element.name;
+                    var value = element.value;
+
+                    if( name ) {
+                        obj[ name ] = value;
+                    }
+                }
+                return obj;
+            }
+
+            function generateRequestJsonPayload(token) {
+                var obj = {};
+                obj["token"] = token;
+                obj["instanceId"] = captchaInstance.id;
+                obj["userProfile"] = getFormData("my-form");
+
+                return JSON.stringify(obj);
+            }
+
+            //This function name is hard coded and used in rendering captcha
             //It will be called when user solves the captcha challenge.
-            function verifyCaptchaChallenge(token) {
+            function verifyChallengeAndSubmit(token) {
                 var xhttp = new XMLHttpRequest();
                 xhttp.onreadystatechange = function() {
                     if (this.readyState == 4) {
@@ -84,16 +101,16 @@
                         if (this.status == 200) {
                             let result = JSON.parse(this.responseText);
                             if (result.success) {
-                                onSubmit();
+                                redirectToUserInfoPage();
                             }
                         } else {
                             alert("Failed");
                         }
                     }
                 };
-                xhttp.open("POST", "/siw/captchas/"+ captchaConfigResponse.id +"/verify", false);
-                xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-                xhttp.send("token="+token);
+                xhttp.open("POST", "/api/v1/verify_and_register", false);
+                xhttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+                xhttp.send(generateRequestJsonPayload(token));
             }
 
             function loadCaptchaRenderScript(script) {
@@ -109,30 +126,55 @@
                 captchaScript.defer = true;
                 document.body.appendChild(captchaScript);
             }
+
+            function loadCaptcha(captchaInstance) {
+                var renderScript = null;
+                var cdnURL = null;
+                console.log("captcha.type="+captchaInstance.type);
+                console.log("captcha.sitekey="+captchaInstance.sitekey);
+                if (captchaInstance.type == "RECAPTCHAV2") {
+                    renderScript = "function onloadCallback() {\n" +
+                        "                console.log(\"onloadCallback\");\n" +
+                        "                grecaptcha.render('myBtn', {\n" +
+                        "                   'sitekey' : captchaInstance.sitekey,\n" +
+                        "                   'callback' : verifyChallengeAndSubmit\n" +
+                        "                });\n" +
+                        "            }";
+                    cdnURL = "https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit";
+                } else if (captchaInstance.type == "HCAPTCHA") {
+                    renderScript = "function onloadCallback() {\n" +
+                        "                console.log(\"onloadCallback\");\n" +
+                        "                hcaptcha.render('myBtn', {\n" +
+                        "                   'sitekey' : captchaInstance.sitekey,\n" +
+                        "                   'callback' : verifyChallengeAndSubmit\n" +
+                        "                });\n" +
+                        "            }";
+                    cdnURL = "https://hcaptcha.com/1/api.js?onload=onloadCallback&render=explicit";
+                }
+
+                if (renderScript!=null && cdnURL!=null) {
+                    loadCaptchaRenderScript(renderScript);
+                    loadCaptchaCDNUrl(cdnURL);
+                }
+            }
             /*]]>*/
         </script>
     </head>
     <body>
-        <form id="my-form" action="/register" method="POST">
+        <form id="my-form" action="/user_info" method="POST">
             Name: <input name="username" type="text"> <br>
             Email: <input name="email" type="text"> <br>
             <input id='myBtn' type="submit" value="Submit">
         </form>
 
         <script>
-            //If captcha is enabled, return related captcha instance id. Or set instanceId as null.
-            if (isOrgCaptchaFFEnabled()) {
-                instanceId = isCaptchaEnabledAndReturnInstanceId();
+            //If captcha is enabled, return related captcha instance configuration. Or set it as null.
+            captchaInstance = isCaptchaEnabledAndReturnInstanceConfig();
+            console.log("instanceConfig="+captchaInstance);
+            //Explicitly render captcha plugin.
+            if (captchaInstance != null) {
+                loadCaptcha(captchaInstance);
             }
-            console.log("instanceId="+instanceId);
-            //Get captcha configuration by instanceId and explicitly render captcha plugin.
-            if (instanceId != null) {
-                getCaptchaInstanceConfig(instanceId);
-                console.log(captchaConfigResponse);
-                loadCaptchaRenderScript(captchaConfigResponse.renderScript);
-                loadCaptchaCDNUrl(captchaConfigResponse.scriptUrl);
-            }
-
         </script>
     </body>
 </html>
