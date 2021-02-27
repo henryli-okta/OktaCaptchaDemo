@@ -1,15 +1,18 @@
 package com.example.demo.okta.org.beans;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class OrgCaptchaConfig {
-    private Boolean enabled;
+    private List<String> enabledPages = new ArrayList<>();
     private String instanceId;
 
-    public Boolean getEnabled() {
-        return enabled;
+    public List<String> getEnabledPages() {
+        return enabledPages;
     }
 
-    public void setEnabled(Boolean enabled) {
-        this.enabled = enabled;
+    public void setEnabledPages(List<String> enabledPages) {
+        this.enabledPages = enabledPages;
     }
 
     public String getInstanceId() {

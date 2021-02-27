@@ -40,7 +40,7 @@
                     });
 
                     //if org-wide captcha is enabled, return related instance id.
-                    if (orgCaptchaConfig.enabled) {
+                    if (Array.isArray(orgCaptchaConfig.enabledPages) && orgCaptchaConfig.enabledPages.includes("ssr")) {
                         return orgCaptchaConfig.captchaInstance;
                     }
                 }

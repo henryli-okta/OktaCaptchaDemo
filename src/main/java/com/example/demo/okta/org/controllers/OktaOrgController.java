@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
+
 @RestController
 public class OktaOrgController {
 
@@ -30,7 +32,7 @@ public class OktaOrgController {
     public OrgCaptchaConfigResponse getOrgCaptchaConfigFromSIW() {
         OrgCaptchaConfig orgCaptchaConfig =  orgConfigurationService.getOrgCaptchaConfiguration();
         if (!orgConfigurationService.hasEnableCaptchaSupportFF()) {
-            orgCaptchaConfig.setEnabled(false);
+            orgCaptchaConfig.setEnabledPages(new ArrayList<>());
         }
         return populatedOrgCaptchaConfigResponse(orgCaptchaConfig);
     }
@@ -60,7 +62,7 @@ public class OktaOrgController {
         OrgCaptchaConfigResponse orgCaptchaConfigResponse = new OrgCaptchaConfigResponse();
         CaptchaInstance captchaInstance = captchaInstanceService.getCaptchaInstanceById(orgCaptchaConfig.getInstanceId());
         orgCaptchaConfigResponse.setCaptchaInstance(captchaInstance);
-        orgCaptchaConfigResponse.setEnabled(orgCaptchaConfig.getEnabled());
+        orgCaptchaConfigResponse.setEnabledPages(orgCaptchaConfig.getEnabledPages());
         return orgCaptchaConfigResponse;
     }
 }

@@ -6,6 +6,9 @@ import com.example.demo.okta.org.beans.OrgCaptchaConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 public class OktaOrgConfigurationService {
 
@@ -15,7 +18,7 @@ public class OktaOrgConfigurationService {
 
     public OrgCaptchaConfig getOrgCaptchaConfiguration() {
         OrgCaptchaConfig orgCaptchaConfig = new OrgCaptchaConfig();
-        orgCaptchaConfig.setEnabled(true);
+        orgCaptchaConfig.getEnabledPages().add("SSR");
         orgCaptchaConfig.setInstanceId("123");
         return orgCaptchaConfig;
     }

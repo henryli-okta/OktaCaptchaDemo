@@ -2,17 +2,19 @@ package com.example.demo.okta.org.beans;
 
 import com.example.demo.okta.captcha.beans.instances.CaptchaInstance;
 
+import java.util.List;
+
 public class OrgCaptchaConfigResponse {
 
-    private Boolean enabled;
+    private List<String> enabledPages;
     private CaptchaInstance captchaInstance;
 
-    public Boolean getEnabled() {
-        return enabled;
+    public List<String> getEnabledPages() {
+        return enabledPages;
     }
 
-    public void setEnabled(Boolean enabled) {
-        this.enabled = enabled;
+    public void setEnabledPages(List<String> enabledPages) {
+        this.enabledPages = enabledPages;
     }
 
     public CaptchaInstance getCaptchaInstance() {
