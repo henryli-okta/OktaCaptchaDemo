@@ -18,7 +18,7 @@ public class OktaOrgConfigurationService {
 
     public OrgCaptchaConfig getOrgCaptchaConfiguration() {
         OrgCaptchaConfig orgCaptchaConfig = new OrgCaptchaConfig();
-        orgCaptchaConfig.getEnabledPages().add("SSR");
+        orgCaptchaConfig.getEnabledPages().add("ssr");
         orgCaptchaConfig.setInstanceId("123");
         return orgCaptchaConfig;
     }
